@@ -1,0 +1,121 @@
+/* Panel de NEXUS — CSS propio con variables, sin framework (directiva 26).
+   Portado del SCSS de Angular/Material el 2026-08-06. Theme-aware: el modo
+   claro/oscuro sale de `prefers-color-scheme`. Los colores de severidad son
+   fijos porque legibles sobre ambos fondos. */
+
+:root {
+  --fondo: #f7f8fa;
+  --panel: #ffffff;
+  --texto: #1a1d21;
+  --tenue: #5b6470;
+  --borde: #e2e6eb;
+  --barra: #1e293b;
+  --barra-texto: #f1f5f9;
+  --sombra: 0 1px 2px rgba(0, 0, 0, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0f141a;
+    --panel: #161c24;
+    --texto: #e6eaef;
+    --tenue: #9aa4b2;
+    --borde: #26303c;
+    --barra: #0b0f14;
+    --barra-texto: #e6eaef;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.barra {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--barra);
+  color: var(--barra-texto);
+}
+.barra .marca { font-weight: 600; letter-spacing: 1px; }
+.barra .sub { font-size: 13px; opacity: .7; }
+
+main { padding: 24px; max-width: 1100px; margin: 0 auto; display: block; }
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.tarjeta {
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  box-shadow: var(--sombra);
+}
+.tarjeta .n { font-size: 26px; font-weight: 600; }
+.tarjeta .l {
+  color: var(--tenue);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+.tabla th, .tabla td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--borde);
+}
+.tabla th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--tenue);
+}
+.tabla tbody tr:last-child td { border-bottom: none; }
+
+.url {
+  max-width: 380px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.chip.critical { background: #7f1d1d; color: #fecaca; }
+.chip.high     { background: #9a3412; color: #fed7aa; }
+.chip.medium   { background: #854d0e; color: #fde68a; }
+.chip.low      { background: #1e3a5f; color: #bfdbfe; }
+.chip.info,
+.chip.unknown  { background: #334155; color: #cbd5e1; }
+
+.vacio {
+  color: var(--tenue);
+  padding: 24px 0;
+  text-align: center;
+}

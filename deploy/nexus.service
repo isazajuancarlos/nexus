@@ -1,0 +1,31 @@
+# Unidad systemd para NEXUS en el VPS (192.99.42.108).
+# Copiar a /etc/systemd/system/nexus.service y `systemctl daemon-reload`.
+#
+# Lo IMPORTANTE es el límite de memoria por cgroup: el VPS no tiene swap, así que
+# un pico del scanner sin este techo podría hacer que el OOM-killer matara a
+# PostgreSQL, al OPRF o a medico. Con MemoryMax, el único que muere es nexus.
+
+[Unit]
+Description=NEXUS bug bounty orchestrator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=debian
+WorkingDirectory=/home/debian/nexus
+EnvironmentFile=/home/debian/nexus/.env
+# Escucha solo en loopback; nginx delante si se quiere exponer la UI.
+ExecStart=/home/debian/nexus/nexus serve --host 127.0.0.1 --port 8003
+
+# --- Contención de recursos (VPS sin swap) ---
+MemoryHigh=1G          # a partir de aquí, el kernel presiona a nexus
+MemoryMax=1500M        # techo duro: se mata SOLO nexus, no los servicios que cobran
+CPUWeight=50           # menos prioridad de CPU que los servicios de producción
+TasksMax=256
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,49 @@
+/target
+*.db
+*.db-wal
+*.db-shm
+/scans/
+/logs/
+/evidence/
+/manual_reports/
+/wordlists/
+.env
+handles.txt
+.cursor
+conversaciones/
+# Angular: se versiona el fuente (web/nexus-ui/src) y el build embebido (web/dist),
+# NO las dependencias ni la caché.
+web/nexus-ui/node_modules/
+web/nexus-ui/dist/
+web/nexus-ui/.angular/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# `vendor/` ENTRA ENTERO, PASE LO QUE PASE
+# ─────────────────────────────────────────────────────────────────────────────
+# Las reglas de arriba están escritas para NUESTRO árbol y se comen archivos del
+# ajeno. Medido aquí el 2026-08-14, antes de esta línea: **2 archivos**
+# desaparecían —`vendor/sqlx/tests/.env` y `vendor/sqlx/tests/sqlite/sqlite.db`,
+# fixtures del propio crate—.
+#
+# Y el fallo NO SE VE: `git status` no lista lo ignorado, así que el commit sale
+# limpio, aquí compila —el árbol de trabajo tiene los archivos— y **revienta en
+# el clon** con un checksum que no casa. Solo se descubre clonando.
+#
+# No se arregla afinando las reglas de arriba: mañana entra un crate con un
+# `out/`, un `*.so` o un `dist/`. Se cierra por el otro lado, negando el subárbol
+# entero.
+!vendor/**
+
+# Labs de análisis: secretos y artefactos EFÍMEROS (loopback, se regeneran por
+# corrida; contenedores se bajan con `docker compose down -v`). Barandilla contra
+# un `git add analisis/...` accidental — no son credenciales de producción.
+analisis/**/.env
+analisis/**/.signaling-secret
+analisis/**/caso*.json
+analisis/**/.sig-*.json
+analisis/**/.session-*
+analisis/**/.token
+analisis/**/.venv/
+
+# Clones de estudio (no son fuente de nexus; cada uno es su propio repo)
+/analisis/

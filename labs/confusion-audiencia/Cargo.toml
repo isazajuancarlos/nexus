@@ -1,0 +1,25 @@
+# Lab de discriminación del ORÁCULO DE CONFUSIÓN DE AUDIENCIA (token sobre-privilegiado).
+# Crate INDEPENDIENTE (workspace propio vacío). Usa el vendor/ de nexus (source
+# replacement heredado), así que las versiones se fijan a lo ya vendorizado.
+[workspace]
+
+[package]
+name = "confusion-audiencia"
+version = "0.1.0"
+edition = "2021"
+description = "Lab de discriminación: un token de un RP de baja confianza NO debe ser aceptado por una audiencia mayor (CWE-269/863). Banco Safe/Vulnerable para probar que el oráculo diferencial discrimina (D33)."
+license = "AGPL-3.0-or-later"
+authors = ["Juan Carlos Isaza"]
+
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# HS256 a mano (no hay jsonwebtoken en el vendor); cliente HTTP crudo por TcpStream.
+# HMAC-SHA256 a mano sobre sha2 (el crate `hmac` vendorizado choca con sha2; ver nexus)
+sha2 = "0.10"
+base64 = "0.22"
+
+[profile.dev.package."*"]
+opt-level = 3

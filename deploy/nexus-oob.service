@@ -1,0 +1,46 @@
+# Colector SSRF out-of-band de NEXUS (fase 3.1b).
+# Copiar a /etc/systemd/system/nexus-oob.service y `systemctl daemon-reload`.
+#
+# A DIFERENCIA de los demás servicios de nexus, este escucha en 0.0.0.0 (PÚBLICO):
+# tiene que ser alcanzable desde el servidor de un objetivo vulnerable para que su
+# petición SSRF saliente registre el callback. Solo REGISTRA (token + IP origen);
+# no expone nada de la BD. El payload que inyecta la sonda usa la IP cruda del VPS
+# (http://192.99.42.108:8004/<token>), así que no hace falta DNS ni un tercero.
+#
+# Requisito de red: el puerto 8004/tcp debe estar abierto al mundo. El VPS no
+# tiene ufw; verificar que no lo bloquee un cortafuegos de OVH tras desplegar
+# (`curl http://192.99.42.108:8004/prueba` desde fuera → debe registrar el hit).
+
+[Unit]
+Description=NEXUS SSRF out-of-band callback collector (público)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=debian
+WorkingDirectory=/home/debian/nexus
+EnvironmentFile=/home/debian/nexus/.env
+# Escucha PÚBLICA en el puerto del colector (debe coincidir con NEXUS_OOB_PORT
+# y con el puerto de NEXUS_OOB_BASE en el .env que usa el ciclo hunt).
+ExecStart=/home/debian/nexus/nexus oob-server
+
+# --- Contención de recursos: es un servicio mínimo (solo registra callbacks) ---
+MemoryHigh=128M
+MemoryMax=256M
+CPUWeight=20           # el más bajo: nunca debe restar CPU a lo que cobra
+TasksMax=128
+
+# --- Endurecimiento: un servicio público en producción compartida ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+# Solo puede escribir la BD de nexus (comparte oob_hits con el ciclo hunt).
+ReadWritePaths=/home/debian/nexus
+PrivateTmp=true
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

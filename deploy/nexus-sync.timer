@@ -1,0 +1,11 @@
+# sync diario (08:00 con jitter): mantiene al día bounties y estados de reportes.
+[Unit]
+Description=NEXUS sync diario
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

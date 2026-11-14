@@ -1,0 +1,11 @@
+-- Segundo proveedor de programas (Intigriti).
+--
+-- El identificador de un programa deja de ser SOLO su handle de H1: la columna
+-- `platform` (que ya existía dormida, default 'hackerone') pasa a distinguir de
+-- qué plataforma es cada programa ('hackerone' | 'intigriti'), y `external_id`
+-- guarda el id NATIVO del proveedor —el GUID de Intigriti— para poder enviar el
+-- reporte por su API cuando haya token (hoy no se usa para escanear).
+--
+-- No hay columna `provider` nueva: `platform` ya modela esa dimensión y estaba
+-- sin usar (directiva 32 — no duplicar un campo que ya existe).
+ALTER TABLE programs ADD COLUMN external_id TEXT;

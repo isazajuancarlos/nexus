@@ -1,0 +1,15 @@
+# Dispara un ciclo del cazador cada 2 h (con jitter). Cada ciclo cubre UN
+# programa; con N programas, cada uno se revisita cada ~N*2h.
+# Instalar: copiar a /etc/systemd/system/, `systemctl daemon-reload`,
+#           `systemctl enable --now nexus-hunt.timer`.
+[Unit]
+Description=NEXUS hunt cada 2h
+
+[Timer]
+OnActiveSec=10min
+OnUnitActiveSec=2h
+RandomizedDelaySec=20min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

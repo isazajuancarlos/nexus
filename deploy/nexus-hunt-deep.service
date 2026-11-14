@@ -1,0 +1,20 @@
+# Pasada PROFUNDA del cazador (semanal): incluye enhanced recon
+# (gau/katana/ffuf/arjun) para descubrir más superficie con parámetros — el
+# mayor multiplicador de hallazgos. Más lenta, por eso semanal y aparte del
+# ciclo de amplitud (cada 2h, sin enhanced recon).
+[Unit]
+Description=NEXUS deep hunt (con enhanced recon)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=debian
+WorkingDirectory=/home/debian/nexus
+EnvironmentFile=/home/debian/nexus/.env
+ExecStart=/home/debian/nexus/nexus --safe-mode hunt
+MemoryHigh=1500M
+MemoryMax=2G
+CPUWeight=25
+TasksMax=512
+TimeoutStartSec=10800

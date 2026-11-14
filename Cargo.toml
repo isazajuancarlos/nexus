@@ -1,0 +1,83 @@
+[package]
+name = "nexus"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.94"
+authors = ["Juan Carlos Isaza"]
+license = "MIT"
+description = "NEXUS — orquestador de bug bounty en Rust (unifica hacker/ + bounty/). El motor son binarios externos; Rust dirige, protege la IP y persiste."
+
+# ------------------------------------------------------------------------------
+# Perfil de release afinado para BAJOS RECURSOS (VPS 6 vCPU / 11 GiB / SWAP=0).
+# Prioriza binario pequeño y poca RAM sobre velocidad bruta de CPU.
+# ------------------------------------------------------------------------------
+[profile.release]
+opt-level = "z"        # optimizar por TAMAÑO (menos páginas de código en RAM)
+lto = "fat"            # link-time optimization agresivo
+codegen-units = 1      # mejor optimización a cambio de build más lento
+panic = "abort"        # sin unwinding: binario menor, sin coste de landing pads
+strip = true           # sin símbolos de depuración
+overflow-checks = true # las comprobaciones de overflow se quedan: seguridad > 1%
+
+# Puerta de buenas prácticas por DEFECTO. Solo `deny` porque el CI corre
+# `-D warnings`: aquí solo entra lo que se está dispuesto a BLOQUEAR.
+[lints.clippy]
+redundant_clone = "deny"    # clon innecesario (rendimiento)
+needless_collect = "deny"   # `.collect()` para volver a iterar (rendimiento)
+
+[dependencies]
+# Runtime async. Sin la feature "full": solo lo que se usa, para reducir binario.
+tokio = { version = "1.53", default-features = false, features = [
+    "rt-multi-thread", "macros", "process", "fs", "time", "signal", "sync", "io-util", "net",
+] }
+# HTTP client — rustls, NUNCA openssl (portabilidad del binario, sin libssl en el VPS).
+# reqwest 0.13 renombró la feature a `rustls` (usa aws-lc-rs como proveedor).
+reqwest = { version = "0.13", default-features = false, features = [
+    "json", "rustls", "gzip", "query",
+] }
+# Base de datos: SQLite, una por instancia. Migraciones embebidas. SQLite es
+# LOCAL: no lleva TLS, así que un solo proveedor cripto en todo el binario.
+sqlx = { version = "0.9", default-features = false, features = [
+    "runtime-tokio", "sqlite", "macros", "migrate", "chrono",
+] }
+# API HTTP / UI. El panel se renderiza en el servidor con `maud` (directiva 26):
+# HTML tejido por rustc, sin Node ni npm en el build. htmx va vendorizado y
+# embebido por `include_str!` (nunca CDN) — un solo ejecutable offline.
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
+tower-http = { version = "0.7", default-features = false, features = ["fs", "trace"] }
+maud = { version = "0.27", features = ["axum"] }
+# CLI: ~22 flags heredados de bounty/.
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"      # log rotado (equivale al logger 5 MB de bounty/)
+anyhow = "1"
+thiserror = "2"
+rand = "0.9"                  # jitter anti-patrón en las esperas
+sha2 = "0.10"                 # SHA-256 para forjar/verificar JWT (HMAC propio, lab de auth)
+sha1 = { version = "0.11", default-features = false }  # handshake WS (Sec-WebSocket-Accept); sin oid (const-oid no vendorizado)
+base64 = "0.22"               # base64 del key/accept del handshake WebSocket
+ipnet = "2"                   # rangos CIDR en la validación de scope
+# Firma RS256 para las variantes ASIMÉTRICAS del lab de auth (jwk/jku con clave RSA propia).
+# Ya está en el árbol (lo tira reqwest/rustls) → descarga CERO. default-features=false omite
+# `ring-io`/`ring-sig-verify` (tiran de `untrusted 0.7.1`, NO vendorizado): no los usamos —
+# firmamos (no gateado) y verificamos en test por re-firma (PKCS#1 v1.5 es determinista).
+aws-lc-rs = { version = "1.18", default-features = false, features = ["aws-lc-sys", "alloc"] }
+
+[dev-dependencies]
+# El arnés de navegador. Era la CUARTA copia de la misma pieza —informes,
+# medico, chasqui e inventario tenían las otras tres— y es la última que
+# quedaba. `mirilla` se consume por `rev` contra el espejo local; es
+# `dev-dependency`, así que no toca el binario.
+#
+# nexus no lleva `boi` —su panel no necesitó JavaScript propio, y eso es
+# correcto— así que la condición que se espera aquí no es `data-boi` sino que el
+# documento esté completo y htmx haya quedado cableado. La pieza es la misma; la
+# condición la pone cada producto, que es justo el reparto que hace reutilizable
+# un arnés.
+mirilla = { git = "file:///home/juan/espejos/mirilla.git", rev = "c7de2e8" }
+tokio = { version = "1.53", features = ["full", "test-util"] }
+tempfile = "3"

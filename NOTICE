@@ -1,0 +1,11 @@
+NEXUS — orquestador de bug bounty
+Copyright (c) 2026 Isaza Arenas
+
+Este producto se distribuye bajo la licencia MIT (véase LICENSE).
+
+Autor legal: Isaza Arenas (Juan Carlos Isaza), Medellín, Colombia.
+"Xiliux" es una marca de software, no una persona jurídica.
+
+Herramienta de investigación de seguridad autorizada. Orquesta binarios de
+terceros (ProjectDiscovery: subfinder, httpx, nuclei; y otros) que conservan sus
+propias licencias y no se redistribuyen con este código.

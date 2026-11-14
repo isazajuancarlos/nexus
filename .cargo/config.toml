@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: LicenseRef-Propietario
+#
+# TODAS las dependencias salen de `vendor/`, dentro del repositorio. No se
+# descarga nada: ni el índice de crates.io, ni un `.crate`, ni el espejo de git.
+#
+# El positivo de control NO es `--offline`, que solo prueba que no salió a la red
+# pudiendo tirar de la caché de `~/.cargo`. Lo que discrimina es la caché VACÍA:
+#
+#     CARGO_HOME=$(mktemp -d) cargo build --offline
+#
+# POR QUÉ — decisión de Juan, 2026-08-14: «no podemos depender de herramientas
+# online hasta saber que todo es seguro, y eso va a tardar». El protocolo «solo
+# local» sacó el CÓDIGO de los registros; esto saca la CONSTRUCCIÓN.
+#
+# Y HAY UN ESLABÓN QUE CARGO NO VERIFICA: comprueba `Cargo.lock` <-> campo
+# `package` y campo `files` <-> bytes, pero NO `package` <-> `files`, y offline
+# no puede. Editar un archivo Y su entrada en `files` compila en silencio. Lo que
+# sí ancla los bytes es `conocimiento/anclar-vendor`, que re-baja el árbol con un
+# CARGO_HOME limpio y compara — y deja el sello en `supply-chain/anclaje.txt`,
+# que `lo-que-corre-al-compilar` comprueba en cada corrida.
+#
+# NEXUS LLEGÓ EL ÚLTIMO, y conviene decir por qué: la lista de repositorios a
+# vendorizar se escribió A MANO y decía «los diez». Son ONCE. Nexus no salió
+# porque no estaba en mi cabeza, y ninguna medición lo contradijo hasta que una
+# frase del README de quipu obligó a contar. Directiva 20 aplicada al inventario.
+#
+# Rutas RELATIVAS a propósito: cargo las escribe absolutas y eso ata el
+# repositorio a esta máquina.
+
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source."git+file:///home/juan/espejos/mirilla.git?rev=c7de2e8"]
+git = "file:///home/juan/espejos/mirilla.git"
+rev = "c7de2e8"
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"

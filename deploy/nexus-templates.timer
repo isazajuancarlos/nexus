@@ -1,0 +1,12 @@
+# Diario (05:00 con jitter), antes de las cazas activas del día. Maximiza la
+# frescura de plantillas; el día que no hay novedad es un no-op instantáneo.
+[Unit]
+Description=NEXUS actualiza plantillas de nuclei (diario)
+
+[Timer]
+OnCalendar=*-*-* 05:00:00
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

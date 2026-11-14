@@ -1,0 +1,27 @@
+# Un ciclo del cazador autónomo. Lo dispara nexus-hunt.timer.
+# Copiar a /etc/systemd/system/ y `systemctl daemon-reload`.
+[Unit]
+Description=NEXUS autonomous hunt cycle (recon+scan+verify+auto-submit de un programa)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=debian
+WorkingDirectory=/home/debian/nexus
+EnvironmentFile=/home/debian/nexus/.env
+# Sc1: scheduling por BD (elige el programa menos-reciente). Reemplaza el
+# cursor bash de nexus-cycle.sh (que queda como alternativa). --safe-mode para
+# ritmo conservador; el auto-envío se activa con NEXUS_AUTO_SUBMIT=1 en el .env.
+# --recon-passive-only: enhanced recon SIN la fuerza bruta de ffuf (gau/wayback/
+# katana) — superficie de endpoints para nuclei sin el riesgo de baneo de la caza
+# agresiva. La caza PROFUNDA semanal (nexus-hunt-deep) sí hace ffuf.
+# El presupuesto del ciclo se acota con NEXUS_SCAN_DEADLINE_SECS en el .env (por
+# debajo de TimeoutStartSec), para que pare limpio antes del SIGKILL.
+ExecStart=/home/debian/nexus/nexus --safe-mode --recon-passive-only hunt
+# Contención de recursos (VPS compartido; hay 4G de swap, pero acotamos igual).
+MemoryHigh=1500M
+MemoryMax=2G
+CPUWeight=30
+TasksMax=512
+TimeoutStartSec=3600

@@ -1,0 +1,31 @@
+-- SECUENCIAS → LA CARA AMURALLADA (camino A, 2026-08-26, decisión de Juan).
+--
+-- La reforma 0011 dio a la biblioteca la cara del FRACASO, pero solo el fracaso
+-- SERVIDO: una variante entra a `veces_refutada` únicamente cuando la app respondió
+-- la petición (status < 400) sin exfiltrar. Medido en producción el 2026-08-26:
+-- `secuencias` seguía en 0 filas mientras `exclusiones` crecía. La causa NO era un
+-- cableado roto (registrar_refutada estaba bien conectado, 0 errores en el journal)
+-- sino un PUNTO MUERTO: sobre objetivos maduros (eurid, exoscale, ripe) toda variante
+-- generada vuelve AMURALLADA (4xx/5xx del WAF), que el código —por diseño— NO contaba
+-- como refutación. Y como el enforcement de `exclusiones` salta la Fase 2 en cuanto
+-- un host gana `metodos_agotados`, la Fase 2 dejó de correr (0 veces en 2 días, 63
+-- SALTADO) → la biblioteca nunca se sembraba. Un mecanismo (enforcement) mataba de
+-- hambre a otro (la biblioteca).
+--
+-- La intención ORIGINAL de Juan era más amplia de lo que el código implementó:
+-- «guardar las variantes aunque fracasen permite reciclar en otro sitio». Un 403 en
+-- el host A es ruido de LA POSTURA DE A, no de la variante — y cross-host ese
+-- argumento se cae: la misma variante amurallada en A es un candidato NO PROBADO en B,
+-- que tiene otra postura. Así que la amurallada TAMBIÉN entra a la biblioteca — pero
+-- MARCADA con su causa, para no reciclar a ciegas (la barandilla que pidió Juan).
+--
+--   - `veces_amurallada`: cuántas veces esta variante se probó en este host y el WAF/
+--     app la BLOQUEÓ (status >= 400). Es señal más débil que `veces_refutada` (nunca
+--     llegó a procesarse server-side), por eso el reciclaje la ordena POR DEBAJO de
+--     las servidas. Una fila puede acumular las tres caras con el tiempo:
+--     confirmada (edge real), refutada (servida sin exfiltrar), amurallada (bloqueada).
+--
+-- Directiva 32 (un valor con dos significados son dos campos): servida y amurallada
+-- son dos señales distintas de calidad de candidata, no un solo contador de fracaso.
+
+ALTER TABLE secuencias ADD COLUMN veces_amurallada INTEGER NOT NULL DEFAULT 0;

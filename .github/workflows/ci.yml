@@ -1,0 +1,69 @@
+# EL VERDE LOCAL DE `nexus`. NO lo corre GitHub.
+#
+# Actions está apagado en toda la cuenta desde el protocolo «solo local»
+# (2026-08-10). Este archivo existe porque **es la definición del verde**, y la
+# lee `conocimiento/cupo/verde_local.py`:
+#
+#     python3 /mnt/data/conocimiento/cupo/verde_local.py nexus
+#
+# NACE EL 2026-08-13, tarde: nexus no tenía forma declarada de decir si estaba
+# verde, y ese mismo día se descubrió que su `cargo clippy -- -D warnings`
+# llevaba tiempo ROJO sin que nadie lo notara —comprobado con `git stash` sobre
+# el árbol limpio—. Un repositorio sin verde declarado es uno donde eso puede
+# pasar y nadie se entera.
+name: CI
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}${{ github.ref == 'refs/heads/master' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      # Los pasos van con `name:` porque `verde_local.py` registra los saltos de
+      # local POR NOMBRE: uno sin nombre no se puede saltar.
+      - name: Instalar Chromium
+        run: sudo apt-get update && sudo apt-get install -y chromium-browser
+      - name: Pruebas
+        run: cargo test
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Cadena de suministro
+        run: |
+          # VERSIÓN FIJADA (2026-08-14). `cargo install` NO pasa por `vendor/`:
+          # ignora la sustitución de fuentes —medido con su pareja, el mismo error
+          # dentro y fuera del repo—, así que baja de crates.io y compila los
+          # `build.rs` de su propio árbol, sin vendorizar y sin vigilar. Sin
+          # `--version` eso es «lo último publicado el día que se corra». Y
+          # `--locked` NO lo cubre: fija el lock INTERNO de la herramienta.
+          cargo install cargo-deny --locked --version 0.20.2
+          cargo deny check
+
+      # LA PUERTA DEL RE-VENDORIZADO: con el árbol congelado dentro del
+      # repositorio, el único momento en que puede entrar un script de
+      # construcción envenenado es al re-vendorizar — que es exactamente como
+      # entraron los gusanos de npm y del AUR: no un paquete nuevo, una VERSIÓN
+      # nueva de uno que ya usabas. Se reconstruye la herramienta en el paso para
+      # que un binario viejo junto a una fuente nueva no pase por vigilante al
+      # día (directiva 38).
+      #
+      # Comprueba además el SELLO del anclaje: si el árbol cambió desde la última
+      # vez que se comparó contra crates.io, sale NO SE PUDO COMPROBAR. El
+      # anclaje en sí necesita red y no va aquí.
+      - name: Lo que corre al compilar sigue siendo lo aceptado
+        run: |
+          cargo build --release --quiet --manifest-path /mnt/data/conocimiento/lo-que-corre-al-compilar/Cargo.toml
+          /mnt/data/conocimiento/lo-que-corre-al-compilar/target/release/lo-que-corre-al-compilar "$PWD"

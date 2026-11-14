@@ -1,0 +1,16 @@
+# Refresca las plantillas de nuclei. nexus escanea con -disable-update-check
+# (para no salir a la red a mitad de escaneo), así que SIN esto las plantillas no
+# se actualizan nunca y se degradan en silencio — perdiendo las plantillas de CVE
+# nuevas, que son el hallazgo fresco de más valor. El chequeo es barato: cuando
+# ya están al día dice "No new updates found" al instante.
+[Unit]
+Description=NEXUS actualiza plantillas de nuclei
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=debian
+ExecStart=/home/debian/tools/nuclei -update-templates -silent
+MemoryMax=512M
+TimeoutStartSec=600

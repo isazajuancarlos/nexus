@@ -1,0 +1,14 @@
+# Refresca en H1 el estado de los reportes enviados y el bounty cobrado.
+[Unit]
+Description=NEXUS sync de estados/bounties H1
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=debian
+WorkingDirectory=/home/debian/nexus
+EnvironmentFile=/home/debian/nexus/.env
+ExecStart=/home/debian/nexus/nexus sync
+MemoryMax=512M
+TimeoutStartSec=600

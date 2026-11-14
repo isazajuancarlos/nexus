@@ -1,0 +1,12 @@
+# Pasada profunda semanal (domingos 04:00, con jitter). Complementa el ciclo de
+# amplitud de cada 2h.
+[Unit]
+Description=NEXUS deep hunt semanal
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+RandomizedDelaySec=1h
+Persistent=true
+
+[Install]
+WantedBy=timers.target
